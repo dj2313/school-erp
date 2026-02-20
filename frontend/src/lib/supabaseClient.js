@@ -56,20 +56,27 @@ if (SUPABASE_ANON_KEY && !isValidJWT(SUPABASE_ANON_KEY)) {
   console.error('❌ VITE_SUPABASE_ANON_KEY does not appear to be a valid JWT token');
 }
 
-// ✅ 6. Initialize Supabase Client
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-  },
-});
+// ✅ 6. Initialize Supabase Client (only if both env vars are present)
+let supabase = null;
 
-// ✅ 7. Log initialization status
 if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-  console.log('✅ Supabase client initialized successfully');
-  console.log(`   Project: ${SUPABASE_URL.split('.')[0].replace('https://', '')}`);
+  try {
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+      },
+    });
+    
+    // ✅ 7. Log initialization status
+    console.log('✅ Supabase client initialized successfully');
+    console.log(`   Project: ${SUPABASE_URL.split('.')[0].replace('https://', '')}`);
+  } catch (error) {
+    console.error('❌ Failed to initialize Supabase client:', error.message);
+    supabase = null;
+  }
 } else {
-  console.error('❌ Supabase client failed to initialize - missing credentials');
+  console.warn('⚠️ Supabase is currently disabled - environment variables not set. Using Express backend for authentication.');
 }
 
 export default supabase;
