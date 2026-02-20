@@ -2,10 +2,42 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const { execSync } = require('child_process');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Database initialization
+async function initializeDatabase() {
+  try {
+    console.log('🔄 Initializing database...');
+    
+    // Run Prisma migrations
+    console.log('📋 Running database migrations...');
+    try {
+      execSync('npx prisma migrate deploy --skip-generate', { 
+        stdio: 'inherit'
+      });
+    } catch (e) {
+      console.log('ℹ️ Migration status:', e.message);
+    }
+    
+    // Seed database
+    console.log('🌱 Seeding database...');
+    try {
+      execSync('npx prisma db seed', { 
+        stdio: 'inherit'
+      });
+    } catch (e) {
+      console.log('ℹ️ Seed status:', e.message);
+    }
+    
+    console.log('✅ Database ready');
+  } catch (error) {
+    console.log('⚠️  Note:', error.message);
+  }
+}
 
 // Middlewares
 app.use(cors({
@@ -39,9 +71,6 @@ app.use('/api/expenses', require('./routes/expense.routes'));
 app.use('/api/teacher', require('./routes/teacher.routes'));
 app.use('/api/timetable', require('./routes/timetable.routes'));
 app.use('/api/exams', require('./routes/exam.routes'));
-// app.use('/api/attendance', require('./routes/attendance.routes'));
-// app.use('/api/fees', require('./routes/fee.routes'));
-// app.use('/api/attendance', require('./routes/attendance.routes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -52,6 +81,18 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// Start app with database initialization
+async function start() {
+  if (process.env.NODE_ENV === 'production') {
+    await initializeDatabase();
+  }
+  
+  app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+start().catch(err => {
+  console.error('Startup error:', err);
+  process.exit(1);
 });
