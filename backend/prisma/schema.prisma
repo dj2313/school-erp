@@ -1,0 +1,667 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // or "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// INSTITUTIONS (Multi-tenant root)
+// ─────────────────────────────────────────
+model Institution {
+  id            Int       @id @default(autoincrement())
+  name          String
+  code          String    @unique
+  address       String?
+  city          String?
+  state         String?
+  phone         String?
+  email         String?
+  logo_url      String?
+  website       String?
+  type          String    @default("school") // school | college | coaching
+  is_active     Boolean   @default(true)
+  subscription  String    @default("basic") // basic | pro | enterprise
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  users          User[]
+  students       Student[]
+  staff          Staff[]
+  classes        Class[]
+  fee_structures FeeStructure[]
+  fee_invoices   FeeInvoice[]
+  attendance     Attendance[]
+  exams          Exam[]
+  notifications  Notification[]
+  academic_years AcademicYear[]
+}
+
+// ─────────────────────────────────────────
+// USERS (All portal users)
+// ─────────────────────────────────────────
+model User {
+  id             Int       @id @default(autoincrement())
+  institution_id Int?      // null = SuperAdmin
+  name           String
+  email          String    @unique
+  phone          String?
+  password_hash  String
+  role           Role      @default(TEACHER)
+  avatar_url     String?
+  is_active      Boolean   @default(true)
+  last_login     DateTime?
+  refresh_token  String?
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+
+  institution Institution? @relation(fields: [institution_id], references: [id])
+  staff       Staff?
+  student     Student?
+
+  @@index([institution_id])
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  TEACHER
+  ACCOUNTANT
+  HR
+  RECEPTIONIST
+  LIBRARIAN
+  TRANSPORT
+}
+
+// ─────────────────────────────────────────
+// ACADEMIC YEAR
+// ─────────────────────────────────────────
+model AcademicYear {
+  id             Int      @id @default(autoincrement())
+  institution_id Int
+  name           String   // e.g., "2024-25"
+  start_date     DateTime
+  end_date       DateTime
+  is_current     Boolean  @default(false)
+
+  institution  Institution  @relation(fields: [institution_id], references: [id])
+  classes      Class[]
+  fee_invoices FeeInvoice[]
+  exams        Exam[]
+}
+
+// ─────────────────────────────────────────
+// CLASSES & SECTIONS
+// ─────────────────────────────────────────
+model Class {
+  id               Int     @id @default(autoincrement())
+  institution_id   Int
+  academic_year_id Int
+  name             String  // "Class 10", "Sem 1"
+  section          String? // "A", "B", "C"
+  capacity         Int     @default(40)
+
+  institution          Institution         @relation(fields: [institution_id], references: [id])
+  academic_year        AcademicYear        @relation(fields: [academic_year_id], references: [id])
+  students             Student[]
+  teacher_assignments  TeacherAssignment[]
+  subjects             ClassSubject[]
+  timetable            Timetable[]
+  attendance           Attendance[]
+
+  @@index([institution_id])
+}
+
+// ─────────────────────────────────────────
+// STUDENTS
+// ─────────────────────────────────────────
+model Student {
+  id             Int       @id @default(autoincrement())
+  institution_id Int
+  user_id        Int?      @unique
+  class_id       Int?
+  admission_no   String    @unique
+  roll_no        String?
+  first_name     String
+  last_name      String
+  dob            DateTime?
+  gender         String?
+  blood_group    String?
+  photo_url      String?
+  address        String?
+  phone          String?
+  email          String?
+
+  // Parent/Guardian Info
+  father_name    String?
+  father_phone   String?
+  father_email   String?
+  mother_name    String?
+  mother_phone   String?
+  guardian_name  String?
+  guardian_phone String?
+
+  // Academic
+  admission_date DateTime @default(now())
+  is_active      Boolean  @default(true)
+  category       String?  // General / OBC / SC / ST
+
+  institution  Institution  @relation(fields: [institution_id], references: [id])
+  user         User?        @relation(fields: [user_id], references: [id])
+  class        Class?       @relation(fields: [class_id], references: [id])
+  attendance   Attendance[]
+  fee_invoices FeeInvoice[]
+  exam_results ExamResult[]
+  documents    Document[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([institution_id])
+  @@index([admission_no])
+}
+
+// ─────────────────────────────────────────
+// STAFF
+// ─────────────────────────────────────────
+model Staff {
+  id              Int       @id @default(autoincrement())
+  institution_id  Int
+  user_id         Int       @unique
+  employee_code   String    @unique
+  first_name      String
+  last_name       String
+  dob             DateTime?
+  gender          String?
+  phone           String
+  email           String
+  designation     String
+  department      String?
+  qualification   String?
+  joining_date    DateTime
+  salary          Float
+  bank_account    String?
+  bank_ifsc       String?
+  address         String?
+  photo_url       String?
+  is_active       Boolean   @default(true)
+
+  institution         Institution         @relation(fields: [institution_id], references: [id])
+  user                User                @relation(fields: [user_id], references: [id])
+  attendance          StaffAttendance[]
+  leaves              Leave[]
+  payslips            Payslip[]
+  teacher_assignments TeacherAssignment[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────
+// SUBJECTS
+// ─────────────────────────────────────────
+model Subject {
+  id             Int    @id @default(autoincrement())
+  institution_id Int
+  name           String
+  code           String
+  type           String @default("theory") // theory | practical | language
+
+  class_subjects ClassSubject[]
+  timetable      Timetable[]
+}
+
+model ClassSubject {
+  id         Int @id @default(autoincrement())
+  class_id   Int
+  subject_id Int
+
+  class   Class   @relation(fields: [class_id], references: [id])
+  subject Subject @relation(fields: [subject_id], references: [id])
+}
+
+// Teacher assigned to class-subject
+model TeacherAssignment {
+  id         Int @id @default(autoincrement())
+  class_id   Int
+  staff_id   Int
+  subject_id Int
+
+  class Class @relation(fields: [class_id], references: [id])
+  staff Staff @relation(fields: [staff_id], references: [id])
+}
+
+// ─────────────────────────────────────────
+// ATTENDANCE (Students)
+// ─────────────────────────────────────────
+model Attendance {
+  id             Int              @id @default(autoincrement())
+  institution_id Int
+  class_id       Int
+  student_id     Int
+  date           DateTime         @db.Date
+  status         AttendanceStatus @default(PRESENT)
+  marked_by      Int?             // staff_id
+  remarks        String?
+
+  institution Institution @relation(fields: [institution_id], references: [id])
+  class       Class       @relation(fields: [class_id], references: [id])
+  student     Student     @relation(fields: [student_id], references: [id])
+
+  @@unique([student_id, date])
+  @@index([class_id, date])
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+  HOLIDAY
+  LEAVE
+}
+
+// ─────────────────────────────────────────
+// STAFF ATTENDANCE
+// ─────────────────────────────────────────
+model StaffAttendance {
+  id        Int              @id @default(autoincrement())
+  staff_id  Int
+  date      DateTime         @db.Date
+  punch_in  DateTime?
+  punch_out DateTime?
+  status    AttendanceStatus @default(PRESENT)
+  remarks   String?
+
+  staff Staff @relation(fields: [staff_id], references: [id])
+
+  @@unique([staff_id, date])
+}
+
+// ─────────────────────────────────────────
+// FEE STRUCTURES
+// ─────────────────────────────────────────
+model FeeStructure {
+  id               Int     @id @default(autoincrement())
+  institution_id   Int
+  name             String  // "Annual Fee 2024-25"
+  class_id         Int?
+  academic_year    String
+  total_amount     Float
+  components       Json    // [{name: "Tuition", amount: 5000}, {name: "Library", amount: 500}]
+  due_day          Int?    // day of month fees are due
+  late_fee_per_day Float   @default(0)
+  is_active        Boolean @default(true)
+
+  institution Institution  @relation(fields: [institution_id], references: [id])
+  invoices    FeeInvoice[]
+}
+
+// ─────────────────────────────────────────
+// FEE INVOICES (Per student per term)
+// ─────────────────────────────────────────
+model FeeInvoice {
+  id               Int       @id @default(autoincrement())
+  institution_id   Int
+  student_id       Int
+  fee_structure_id Int
+  academic_year_id Int
+  invoice_no       String    @unique
+  amount           Float     // base amount
+  concession       Float     @default(0)
+  late_fee         Float     @default(0)
+  total_amount     Float     // amount - concession + late_fee
+  paid_amount      Float     @default(0)
+  balance          Float
+  due_date         DateTime
+  status           FeeStatus @default(UNPAID)
+
+  institution   Institution  @relation(fields: [institution_id], references: [id])
+  student       Student      @relation(fields: [student_id], references: [id])
+  fee_structure FeeStructure @relation(fields: [fee_structure_id], references: [id])
+  academic_year AcademicYear @relation(fields: [academic_year_id], references: [id])
+  payments      FeePayment[]
+
+  created_at DateTime @default(now())
+}
+
+enum FeeStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+// ─────────────────────────────────────────
+// FEE PAYMENTS (Each transaction)
+// ─────────────────────────────────────────
+model FeePayment {
+  id             Int         @id @default(autoincrement())
+  invoice_id     Int
+  receipt_no     String      @unique
+  amount         Float
+  payment_mode   PaymentMode @default(CASH)
+  transaction_id String?     // for online payments
+  cheque_no      String?
+  bank_name      String?
+  payment_date   DateTime    @default(now())
+  collected_by   Int?        // staff_id
+  notes          String?
+
+  invoice FeeInvoice @relation(fields: [invoice_id], references: [id])
+}
+
+enum PaymentMode {
+  CASH
+  CHEQUE
+  ONLINE
+  BANK_TRANSFER
+  UPI
+  DEMAND_DRAFT
+}
+
+// ─────────────────────────────────────────
+// EXAMS & RESULTS
+// ─────────────────────────────────────────
+model Exam {
+  id               Int    @id @default(autoincrement())
+  institution_id   Int
+  academic_year_id Int
+  class_id         Int?   // Optional: If null, apply to all classes
+  name             String // "Unit Test 1", "Half Yearly"
+  start_date       DateTime
+  end_date         DateTime
+  type             String @default("written") // written | online | practical
+
+  institution   Institution  @relation(fields: [institution_id], references: [id])
+  academic_year AcademicYear @relation(fields: [academic_year_id], references: [id])
+  class         Class?       @relation(fields: [class_id], references: [id])
+  results       ExamResult[]
+}
+
+model ExamResult {
+  id             Int    @id @default(autoincrement())
+  exam_id        Int
+  student_id     Int
+  subject_id     Int
+  max_marks      Float
+  obtained_marks Float
+  grade          String?
+  remarks        String?
+
+  exam    Exam    @relation(fields: [exam_id], references: [id])
+  student Student @relation(fields: [student_id], references: [id])
+  subject Subject @relation(fields: [subject_id], references: [id])
+
+  @@unique([exam_id, student_id, subject_id])
+}
+
+// ─────────────────────────────────────────
+// LEAVE MANAGEMENT (Staff)
+// ─────────────────────────────────────────
+model Leave {
+  id          Int         @id @default(autoincrement())
+  staff_id    Int
+  leave_type  String      // Casual | Medical | Earned | Maternity
+  from_date   DateTime
+  to_date     DateTime
+  total_days  Float
+  reason      String
+  status      LeaveStatus @default(PENDING)
+  approved_by Int?
+  approved_at DateTime?
+  remarks     String?
+  created_at  DateTime    @default(now())
+
+  staff Staff @relation(fields: [staff_id], references: [id])
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// ─────────────────────────────────────────
+// PAYROLL
+// ─────────────────────────────────────────
+model Payslip {
+  id           Int       @id @default(autoincrement())
+  staff_id     Int
+  month        Int
+  year         Int
+  basic_salary Float
+  allowances   Json      // [{name: "HRA", amount: 2000}]
+  deductions   Json      // [{name: "PF", amount: 1800}, {name: "TDS", amount: 500}]
+  gross_salary Float
+  net_salary   Float
+  working_days Int
+  present_days Int
+  leaves_taken Int
+  payment_date DateTime?
+  payment_mode String    @default("bank_transfer")
+  is_paid      Boolean   @default(false)
+
+  staff Staff @relation(fields: [staff_id], references: [id])
+
+  @@unique([staff_id, month, year])
+}
+
+// ─────────────────────────────────────────
+// TIMETABLE
+// ─────────────────────────────────────────
+model Timetable {
+  id         Int    @id @default(autoincrement())
+  class_id   Int
+  subject_id Int
+  staff_id   Int?
+  day        Int    // 0=Mon, 1=Tue, ... 5=Sat
+  period_no  Int
+  start_time String // "09:00"
+  end_time   String // "09:45"
+
+  class   Class   @relation(fields: [class_id], references: [id])
+  subject Subject @relation(fields: [subject_id], references: [id])
+  staff   Staff?  @relation(fields: [staff_id], references: [id])
+
+  @@unique([class_id, day, period_no])
+}
+
+// ─────────────────────────────────────────
+// NOTICES & ANNOUNCEMENTS
+// ─────────────────────────────────────────
+model Notice {
+  id             Int       @id @default(autoincrement())
+  institution_id Int
+  title          String
+  content        String    @db.Text
+  target_roles   Json      // ["TEACHER", "STUDENT"]
+  class_ids      Json?     // specific classes, null = all
+  is_published   Boolean   @default(false)
+  publish_date   DateTime  @default(now())
+  expiry_date    DateTime?
+  created_by     Int
+  created_at     DateTime  @default(now())
+}
+
+// ─────────────────────────────────────────
+// DOCUMENTS
+// ─────────────────────────────────────────
+model Document {
+  id             Int      @id @default(autoincrement())
+  institution_id Int
+  student_id     Int?
+  staff_id       Int?
+  name           String
+  type           String   // aadhaar | certificate | marksheet | etc.
+  file_url       String
+  uploaded_by    Int
+  created_at     DateTime @default(now())
+
+  student Student? @relation(fields: [student_id], references: [id])
+}
+
+// ─────────────────────────────────────────
+// NOTIFICATIONS LOG
+// ─────────────────────────────────────────
+model Notification {
+  id             Int      @id @default(autoincrement())
+  institution_id Int
+  type           String   // sms | whatsapp | email | push
+  recipient      String   // phone or email
+  message        String   @db.Text
+  status         String   @default("pending") // pending | sent | failed
+  sent_at        DateTime?
+  created_at     DateTime @default(now())
+
+  institution Institution @relation(fields: [institution_id], references: [id])
+}
+
+// ─────────────────────────────────────────
+// ADMISSION INQUIRY
+// ─────────────────────────────────────────
+model Inquiry {
+  id               Int      @id @default(autoincrement())
+  institution_id   Int
+  student_name     String
+  parent_name      String
+  phone            String
+  email            String?
+  class_interested String?
+  source           String?  // walk-in | website | referral
+  status           String   @default("new") // new | followup | admitted | rejected
+  notes            String?
+  assigned_to      Int?
+  created_at       DateTime @default(now())
+}
+
+// ─────────────────────────────────────────
+// HOSTEL
+// ─────────────────────────────────────────
+model HostelRoom {
+  id             Int    @id @default(autoincrement())
+  institution_id Int
+  room_no        String
+  floor          String?
+  capacity       Int
+  type           String  // single | double | dormitory
+  monthly_fee    Float
+
+  allocations HostelAllocation[]
+}
+
+model HostelAllocation {
+  id         Int       @id @default(autoincrement())
+  room_id    Int
+  student_id Int
+  from_date  DateTime
+  to_date    DateTime?
+  is_active  Boolean   @default(true)
+
+  room HostelRoom @relation(fields: [room_id], references: [id])
+}
+
+// ─────────────────────────────────────────
+// TRANSPORT
+// ─────────────────────────────────────────
+model Vehicle {
+  id           Int    @id @default(autoincrement())
+  institution_id Int
+  vehicle_no   String @unique
+  model        String?
+  capacity     Int
+  driver_name  String?
+  driver_phone String?
+  route_id     Int?
+
+  route TransportRoute? @relation(fields: [route_id], references: [id])
+}
+
+model TransportRoute {
+  id             Int    @id @default(autoincrement())
+  institution_id Int
+  name           String // "Route A - North"
+  stops          Json   // [{name: "Bus Stand", time: "07:30", fee: 800}]
+
+  vehicles          Vehicle[]
+  student_transport StudentTransport[]
+}
+
+model StudentTransport {
+  id          Int    @id @default(autoincrement())
+  student_id  Int
+  route_id    Int
+  stop_name   String
+  monthly_fee Float
+
+  route TransportRoute @relation(fields: [route_id], references: [id])
+}
+
+// ─────────────────────────────────────────
+// EXPENSES
+// ─────────────────────────────────────────
+model Expense {
+  id             Int      @id @default(autoincrement())
+  institution_id Int
+  category       String   // Salary | Rent | Utility | Maintenance | Other
+  amount         Float
+  payment_mode   String   @default("CASH")
+  reference_no   String?
+  description    String?
+  expense_date   DateTime @default(now())
+  created_by     Int      // staff_id
+  
+  institution    Institution @relation(fields: [institution_id], references: [id])
+  
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────
+// LIBRARY MANAGEMENT
+// ─────────────────────────────────────────
+model Book {
+  id             Int      @id @default(autoincrement())
+  institution_id Int
+  title          String
+  author         String
+  isbn           String?  @unique
+  category       String?
+  publisher      String?
+  edition        String?
+  copies_total   Int      @default(1)
+  copies_available Int    @default(1)
+  price          Float?
+  location       String?  // Rack/Shelf number
+
+  institution  Institution  @relation(fields: [institution_id], references: [id])
+  transactions LibraryTransaction[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([institution_id])
+}
+
+model LibraryTransaction {
+  id          Int       @id @default(autoincrement())
+  book_id     Int
+  student_id  Int?
+  staff_id    Int?
+  issue_date  DateTime  @default(now())
+  due_date    DateTime
+  return_date DateTime?
+  fine_amount Float     @default(0)
+  status      String    @default("ISSUED") // ISSUED | RETURNED | LOST
+
+  book    Book     @relation(fields: [book_id], references: [id])
+  student Student? @relation(fields: [student_id], references: [id])
+  staff   Staff?   @relation(fields: [staff_id], references: [id])
+
+  @@index([book_id])
+}
+

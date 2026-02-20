@@ -1,0 +1,58 @@
+// src/config/sidebarMenu.js
+export const menus = {
+    SUPERADMIN: [
+        { label: 'Dashboard', path: '/superadmin/dashboard', icon: 'LayoutDashboard' },
+        { label: 'Institutions', path: '/superadmin/institutions', icon: 'Building2' },
+        { label: 'Subscriptions', path: '/superadmin/subscriptions', icon: 'CreditCard' },
+        { label: 'Settings', path: '/superadmin/settings', icon: 'Settings' },
+    ],
+    ADMIN: [
+        { label: 'Dashboard', path: '/admin/dashboard', icon: 'LayoutDashboard' },
+        { label: 'Academic Setup', path: '/admin/academic', icon: 'Library' },
+        { label: 'Students', path: '/admin/students', icon: 'Users' },
+        { label: 'Staff', path: '/admin/staff', icon: 'UserCheck' },
+        { label: 'Leave', path: '/admin/leave', icon: 'CalendarX' },
+        { label: 'Payroll', path: '/admin/payroll', icon: 'IndianRupee' },
+        { label: 'Attendance', path: '/admin/attendance', icon: 'CalendarCheck' },
+        { label: 'Fee Overview', path: '/admin/fees', icon: 'IndianRupee' },
+        { label: 'Collect Fee', path: '/admin/fees/collect', icon: 'Wallet' },
+        { label: 'Pending Dues', path: '/admin/fees/pending', icon: 'AlertCircle' },
+        { label: 'Fee Structure', path: '/admin/fees/structures', icon: 'Settings' },
+        { label: 'Exams', path: '/admin/exams', icon: 'ClipboardList' },
+        { label: 'Timetable', path: '/admin/timetable', icon: 'Clock' },
+        { label: 'Notices', path: '/admin/notices', icon: 'Bell' },
+        { label: 'Reports', path: '/admin/reports', icon: 'BarChart2' },
+    ],
+    TEACHER: [
+        { label: 'Dashboard', path: '/teacher/dashboard', icon: 'LayoutDashboard' },
+        { label: 'Attendance', path: '/teacher/attendance', icon: 'CalendarCheck' },
+        { label: 'My Classes', path: '/teacher/classes', icon: 'BookOpen' },
+        { label: 'Homework', path: '/teacher/homework', icon: 'FileText' },
+        { label: 'Mark Entry', path: '/teacher/marks', icon: 'PenLine' },
+    ],
+    ACCOUNTANT: [
+        { label: 'Dashboard', path: '/accountant/dashboard', icon: 'LayoutDashboard' },
+        { label: 'Collect Fee', path: '/accountant/collect', icon: 'Wallet' },
+        { label: 'Pending Dues', path: '/accountant/pending', icon: 'AlertCircle' },
+        { label: 'Fee Reports', path: '/accountant/reports', icon: 'BarChart2' },
+        { label: 'Expenses', path: '/accountant/expenses', icon: 'Receipt' },
+    ],
+    HR: [
+        { label: 'Dashboard', path: '/hr/dashboard', icon: 'LayoutDashboard' },
+        { label: 'Staff', path: '/hr/staff', icon: 'Users' },
+        { label: 'Attendance', path: '/hr/attendance', icon: 'CalendarCheck' },
+        { label: 'Leave', path: '/hr/leave', icon: 'CalendarX' },
+        { label: 'Payroll', path: '/hr/payroll', icon: 'IndianRupee' },
+    ],
+    RECEPTIONIST: [
+        { label: 'Dashboard', path: '/reception/dashboard', icon: 'LayoutDashboard' },
+        { label: 'Inquiries', path: '/reception/inquiries', icon: 'MessageSquare' },
+        { label: 'Gate Management', path: '/reception/gate', icon: 'DoorOpen' },
+    ],
+    STUDENT: [
+        { label: 'Dashboard', path: '/student/dashboard', icon: 'LayoutDashboard' },
+        { label: 'My Schedule', path: '/student/schedule', icon: 'Clock' },
+        { label: 'My Fees', path: '/student/fees', icon: 'CreditCard' },
+        { label: 'Results', path: '/student/results', icon: 'Trophy' },
+    ],
+};

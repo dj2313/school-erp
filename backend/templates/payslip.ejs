@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .payslip-header {
+            text-align: center;
+            border-bottom: 3px double #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .school-info h2 {
+            margin: 0;
+            color: #1a1a1a;
+        }
+
+        .school-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .payslip-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .meta-group {
+            flex: 1;
+        }
+
+        .meta-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .meta-value {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .table-section h3 {
+            font-size: 14px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #888;
+            padding: 8px 0;
+        }
+
+        td {
+            padding: 10px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .amount-col {
+            text-align: right;
+        }
+
+        .net-salary-row {
+            margin-top: 40px;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .net-label {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .net-amount {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 60px;
+            font-size: 11px;
+            color: #999;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="payslip-header">
+        <div class="school-info">
+            <h2>
+                <%= institution_name %>
+            </h2>
+            <p>Salary Slip for <%= month_name %>
+                    <%= year %>
+            </p>
+        </div>
+    </div>
+
+    <div class="meta-info">
+        <div class="meta-group">
+            <div class="meta-label">Employee Name</div>
+            <div class="meta-value">
+                <%= staff_name %>
+            </div>
+            <div class="meta-label" style="margin-top: 10px;">Designation</div>
+            <div class="meta-value">
+                <%= designation %>
+            </div>
+        </div>
+        <div class="meta-group">
+            <div class="meta-label">Employee ID</div>
+            <div class="meta-value">
+                <%= employee_code %>
+            </div>
+            <div class="meta-label" style="margin-top: 10px;">Department</div>
+            <div class="meta-value">
+                <%= department %>
+            </div>
+        </div>
+        <div class="meta-group" style="text-align: right;">
+            <div class="meta-label">Attendance</div>
+            <div class="meta-value">
+                <%= present_days %> / <%= working_days %> Days
+            </div>
+            <div class="meta-label" style="margin-top: 10px;">Unpaid Leaves</div>
+            <div class="meta-value">
+                <%= leaves_taken %> Days
+            </div>
+        </div>
+    </div>
+
+    <div class="summary-grid">
+        <div class="table-section">
+            <h3>Earnings</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th class="amount-col">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Basic Salary</td>
+                        <td class="amount-col">₹<%= basic_salary.toLocaleString() %>
+                        </td>
+                    </tr>
+                    <% allowances.forEach(function(a) { %>
+                        <tr>
+                            <td>
+                                <%= a.name %>
+                            </td>
+                            <td class="amount-col">₹<%= a.amount.toLocaleString() %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                            <tr style="border-top: 2px solid #333;">
+                                <td style="font-weight: bold;">Gross Earnings</td>
+                                <td class="amount-col" style="font-weight: bold;">₹<%= gross_salary.toLocaleString() %>
+                                </td>
+                            </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-section">
+            <h3>Deductions</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th class="amount-col">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% deductions.forEach(function(d) { %>
+                        <tr>
+                            <td>
+                                <%= d.name %>
+                            </td>
+                            <td class="amount-col">₹<%= d.amount.toLocaleString() %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                            <tr style="border-top: 2px solid #333;">
+                                <td style="font-weight: bold;">Total Deductions</td>
+                                <td class="amount-col" style="font-weight: bold;">₹<%= total_deductions.toLocaleString()
+                                        %>
+                                </td>
+                            </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="net-salary-row">
+        <div class="net-label">NET PAYABLE SALARY</div>
+        <div class="net-amount">₹<%= net_salary.toLocaleString() %>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>This is a computer-generated payslip and does not require a physical signature.</p>
+        <p>© <%= year %>
+                <%= institution_name %>. All Rights Reserved.</p>
+    </div>
+</body>
+
+</html>

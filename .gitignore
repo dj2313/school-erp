@@ -1,0 +1,28 @@
+node_modules
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Build outputs
+dist/
+build/
+
+# Vercel
+.vercel
+
+# Temporary
+.DS_Store
+*.tmp

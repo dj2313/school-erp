@@ -1,0 +1,52 @@
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env.*.local
+
+# Node modules
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Build
+dist/
+build/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Database
+*.sqlite
+*.db
+
+# Uploaded files (local development)
+/public/uploads/*
+!public/uploads/.gitkeep
+
+# Prisma
+.env.prisma
+
+# Vercel
+.vercel
