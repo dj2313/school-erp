@@ -24,6 +24,9 @@ app.get('/', (req, res) => {
     res.json({ message: 'School ERP API is running...' });
 });
 
+// Setup initialization route
+app.use('/api/setup', require('./routes/setup.routes'));
+
 // Import and use routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/superadmin', require('./routes/superadmin.routes'));
