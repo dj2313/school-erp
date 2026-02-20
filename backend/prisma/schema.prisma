@@ -37,6 +37,8 @@ model Institution {
   exams          Exam[]
   notifications  Notification[]
   academic_years AcademicYear[]
+  expenses       Expense[]
+  books          Book[]
 }
 
 // ─────────────────────────────────────────
@@ -110,6 +112,7 @@ model Class {
   subjects             ClassSubject[]
   timetable            Timetable[]
   attendance           Attendance[]
+  exams                Exam[]
 
   @@index([institution_id])
 }
@@ -155,6 +158,7 @@ model Student {
   fee_invoices FeeInvoice[]
   exam_results ExamResult[]
   documents    Document[]
+  library_transactions LibraryTransaction[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -194,6 +198,8 @@ model Staff {
   leaves              Leave[]
   payslips            Payslip[]
   teacher_assignments TeacherAssignment[]
+  timetables          Timetable[]
+  library_transactions LibraryTransaction[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -211,6 +217,7 @@ model Subject {
 
   class_subjects ClassSubject[]
   timetable      Timetable[]
+  exam_results   ExamResult[]
 }
 
 model ClassSubject {
